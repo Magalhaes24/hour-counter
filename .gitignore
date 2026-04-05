@@ -14,6 +14,10 @@ electron/node_modules/
 frontend/node_modules/
 frontend/.next/
 
+# Generated icons are committed (electron/assets/)
+# but keep the generator deps out of source
+
+
 # Next.js build cache
 .next/
 frontend/.next/

@@ -13,6 +13,7 @@ app.disableHardwareAcceleration()
 // Paths
 // ---------------------------------------------------------------------------
 const ROOT         = path.join(__dirname, '..')
+const APP_ICON     = path.join(__dirname, 'assets', 'icon.ico')
 const BACKEND_DIR  = path.join(ROOT, 'backend')
 const FRONTEND_DIR = path.join(ROOT, 'frontend')
 const VENV_PYTHON  = path.join(BACKEND_DIR, '.venv', 'Scripts', 'python.exe')
@@ -232,6 +233,7 @@ function createMainWindow() {
     title: 'Hour Counter',
     backgroundColor: '#020617',
     frame: false,
+    icon: APP_ICON,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -273,6 +275,9 @@ ipcMain.handle('window-is-maximized', () => mainWindow?.isMaximized() ?? false)
 app.on('window-all-closed', () => { killAll(); app.quit() })
 app.on('before-quit', killAll)
 
+// Set app icon for taskbar grouping (Windows)
+app.setAppUserModelId('com.redevaerk.hours-counter')
+
 app.whenReady().then(async () => {
   log('=== App ready ===')
   createSplash()
@@ -290,7 +295,7 @@ app.whenReady().then(async () => {
   } catch (err) {
     log(`FATAL: ${err.message}`)
     closeSplash()
-    const errWin = new BrowserWindow({ width: 520, height: 260, backgroundColor: '#09090b' })
+    const errWin = new BrowserWindow({ width: 520, height: 260, backgroundColor: '#020617', icon: APP_ICON })
     errWin.loadURL(`data:text/html,<body style="background:#020617;color:#f87171;font-family:sans-serif;padding:24px">
       <b style="color:#e2e8f0;font-size:15px">Failed to start Hour Counter</b><br><br>
       ${err.message}<br><br>
