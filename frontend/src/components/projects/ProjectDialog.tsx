@@ -8,6 +8,8 @@ import { createProject, updateProject } from '@/lib/api'
 import { cn } from '@/lib/utils'
 import type { Project } from '@/types'
 
+const PRESET_CLIENTS = ['Redevaerk', 'DSB', 'Credibom', 'CV Telecom']
+
 const PRESET_COLORS = [
   { name: 'indigo', hex: '#6366f1', label: 'Indigo' },
   { name: 'emerald', hex: '#10b981', label: 'Emerald' },
@@ -27,14 +29,18 @@ interface ProjectDialogProps {
 export default function ProjectDialog({ open, onOpenChange, project, onSaved }: ProjectDialogProps) {
   const [name, setName] = useState('')
   const [code, setCode] = useState('')
+  const [client, setClient] = useState('')
   const [color, setColor] = useState('#6366f1')
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
 
+  const defaultCode = `PRJ${new Date().getFullYear().toString().slice(-2)}`
+
   useEffect(() => {
     if (open) {
       setName(project?.name ?? '')
-      setCode(project?.code ?? '')
+      setCode(project?.code ?? defaultCode)
+      setClient(project?.client ?? '')
       setColor(project?.color ?? '#6366f1')
       setError(null)
     }
@@ -51,10 +57,11 @@ export default function ProjectDialog({ open, onOpenChange, project, onSaved }: 
     setError(null)
     try {
       let saved: Project
+      const clientVal = client.trim() || null
       if (project) {
-        saved = await updateProject(project.id, { name: trimmedName, color, code: code.trim() || null })
+        saved = await updateProject(project.id, { name: trimmedName, color, code: code.trim() || null, client: clientVal })
       } else {
-        saved = await createProject({ name: trimmedName, color, code: code.trim() || null })
+        saved = await createProject({ name: trimmedName, color, code: code.trim() || null, client: clientVal })
       }
       onSaved(saved)
       onOpenChange(false)
@@ -92,6 +99,26 @@ export default function ProjectDialog({ open, onOpenChange, project, onSaved }: 
             />
           </div>
 
+          {/* Client */}
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-slate-400">
+              Client
+            </label>
+            <Input
+              type="text"
+              placeholder="e.g. Redevaerk, DSB, Credibom (optional)"
+              value={client}
+              onChange={(e) => setClient(e.target.value)}
+              onKeyDown={handleKeyDown}
+              list="client-suggestions"
+            />
+            <datalist id="client-suggestions">
+              {PRESET_CLIENTS.map((c) => (
+                <option key={c} value={c} />
+              ))}
+            </datalist>
+          </div>
+
           {/* Code */}
           <div>
             <label className="mb-1.5 block text-xs font-medium text-slate-400">
@@ -99,7 +126,7 @@ export default function ProjectDialog({ open, onOpenChange, project, onSaved }: 
             </label>
             <Input
               type="text"
-              placeholder="e.g. PRJ2301.01 (optional)"
+              placeholder="e.g. PRJ26.01"
               value={code}
               onChange={(e) => setCode(e.target.value)}
               onKeyDown={handleKeyDown}

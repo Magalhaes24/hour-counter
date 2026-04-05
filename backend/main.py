@@ -14,13 +14,17 @@ from app.routers import settings as settings_router
 async def lifespan(app: FastAPI):
     # Create all tables on startup
     Base.metadata.create_all(bind=engine)
-    # Migrate existing databases: add code column if not present
+    # Migrate existing databases: add columns if not present
     with engine.connect() as conn:
-        try:
-            conn.execute(text("ALTER TABLE projects ADD COLUMN code TEXT"))
-            conn.commit()
-        except Exception:
-            pass  # column already exists
+        for column_sql in [
+            "ALTER TABLE projects ADD COLUMN code TEXT",
+            "ALTER TABLE projects ADD COLUMN client TEXT",
+        ]:
+            try:
+                conn.execute(text(column_sql))
+                conn.commit()
+            except Exception:
+                pass  # column already exists
     yield
 
 

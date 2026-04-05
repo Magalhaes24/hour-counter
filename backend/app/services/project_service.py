@@ -34,7 +34,7 @@ def create_project(db: Session, data: ProjectCreate) -> Project:
             status_code=status.HTTP_409_CONFLICT,
             detail=f"A project named '{data.name}' already exists.",
         )
-    project = Project(name=data.name, color=data.color, code=data.code)
+    project = Project(name=data.name, color=data.color, code=data.code, client=data.client)
     db.add(project)
     db.commit()
     db.refresh(project)
@@ -63,6 +63,9 @@ def update_project(db: Session, project_id: int, data: ProjectUpdate) -> Project
 
     if "code" in data.model_fields_set:
         project.code = data.code
+
+    if "client" in data.model_fields_set:
+        project.client = data.client
 
     db.commit()
     db.refresh(project)

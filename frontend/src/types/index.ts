@@ -3,6 +3,7 @@
   name: string
   color: string
   code: string | null
+  client: string | null
   archived: boolean
   created_at: string
 }

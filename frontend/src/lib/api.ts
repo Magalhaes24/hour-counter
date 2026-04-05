@@ -26,7 +26,7 @@ export async function getProjects(includeArchived = false): Promise<Project[]> {
   return handleResponse<Project[]>(res)
 }
 
-export async function createProject(data: { name: string; color?: string; code?: string | null }): Promise<Project> {
+export async function createProject(data: { name: string; color?: string; code?: string | null; client?: string | null }): Promise<Project> {
   const res = await fetch(`${API_BASE}/api/projects`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -37,7 +37,7 @@ export async function createProject(data: { name: string; color?: string; code?:
 
 export async function updateProject(
   id: number,
-  data: Partial<{ name: string; color: string; code: string | null; archived: boolean }>
+  data: Partial<{ name: string; color: string; code: string | null; client: string | null; archived: boolean }>
 ): Promise<Project> {
   const res = await fetch(`${API_BASE}/api/projects/${id}`, {
     method: 'PATCH',

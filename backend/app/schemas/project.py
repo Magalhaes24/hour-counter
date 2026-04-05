@@ -7,6 +7,7 @@ class ProjectCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=255)
     color: str = Field(default="#6366f1", pattern=r"^#[0-9a-fA-F]{6}$")
     code: str | None = None
+    client: str | None = None
 
 
 class ProjectUpdate(BaseModel):
@@ -14,6 +15,7 @@ class ProjectUpdate(BaseModel):
     color: str | None = Field(default=None, pattern=r"^#[0-9a-fA-F]{6}$")
     archived: bool | None = None
     code: str | None = None
+    client: str | None = None
 
 
 class ProjectResponse(BaseModel):
@@ -21,6 +23,7 @@ class ProjectResponse(BaseModel):
     name: str
     color: str
     code: str | None = None
+    client: str | None = None
     archived: bool
     created_at: datetime
 

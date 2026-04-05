@@ -284,7 +284,7 @@ ipcMain.handle('check-update', async () => {
   try {
     execSync('git fetch origin main', { cwd: ROOT, stdio: 'ignore', timeout: 15000 })
     const local  = execSync('git rev-parse HEAD',        { cwd: ROOT, encoding: 'utf8' }).trim()
-    const remote = execSync('git rev-parse origin/main', { cwd: ROOT, encoding: 'utf8' }).trim()
+    const remote = execSync('git rev-parse FETCH_HEAD',  { cwd: ROOT, encoding: 'utf8' }).trim()
     return { hasUpdate: local !== remote, current: local.slice(0, 7), latest: remote.slice(0, 7) }
   } catch (e) {
     log(`check-update error: ${e.message}`)

@@ -97,6 +97,9 @@ export default function ProjectCard({
       >
         <div className="flex flex-1 flex-col min-w-0">
           <div className="flex items-center gap-2">
+            {project.client && (
+              <span className="shrink-0 font-mono text-xs text-slate-500">[{project.client}]</span>
+            )}
             <span className="text-sm font-medium text-slate-100 truncate">
               {project.name}
             </span>
