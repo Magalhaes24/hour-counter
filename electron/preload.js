@@ -1,8 +1,10 @@
 const { contextBridge, ipcRenderer } = require('electron')
 
 contextBridge.exposeInMainWorld('electronAPI', {
-  minimize:    () => ipcRenderer.send('window-minimize'),
-  maximize:    () => ipcRenderer.send('window-maximize'),
-  close:       () => ipcRenderer.send('window-close'),
-  isMaximized: () => ipcRenderer.invoke('window-is-maximized'),
+  minimize:          () => ipcRenderer.send('window-minimize'),
+  maximize:          () => ipcRenderer.send('window-maximize'),
+  close:             () => ipcRenderer.send('window-close'),
+  isMaximized:       () => ipcRenderer.invoke('window-is-maximized'),
+  checkForUpdates:   () => ipcRenderer.invoke('check-update'),
+  applyUpdate:       () => ipcRenderer.invoke('apply-update'),
 })
