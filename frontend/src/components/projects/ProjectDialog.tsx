@@ -1,14 +1,12 @@
 ﻿'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/Dialog'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { createProject, updateProject } from '@/lib/api'
 import { cn } from '@/lib/utils'
 import type { Project } from '@/types'
-
-const PRESET_CLIENTS = ['Redevaerk', 'DSB', 'Credibom', 'CV Telecom']
 
 const PRESET_COLORS = [
   { name: 'indigo', hex: '#6366f1', label: 'Indigo' },
@@ -24,15 +22,28 @@ interface ProjectDialogProps {
   onOpenChange: (open: boolean) => void
   project?: Project | null
   onSaved: (project: Project) => void
+  existingClients?: string[]
 }
 
-export default function ProjectDialog({ open, onOpenChange, project, onSaved }: ProjectDialogProps) {
+export default function ProjectDialog({ open, onOpenChange, project, onSaved, existingClients = [] }: ProjectDialogProps) {
   const [name, setName] = useState('')
   const [code, setCode] = useState('')
   const [client, setClient] = useState('')
+  const [clientOpen, setClientOpen] = useState(false)
   const [color, setColor] = useState('#6366f1')
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  const clientRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleOutside = (e: MouseEvent) => {
+      if (clientRef.current && !clientRef.current.contains(e.target as Node)) {
+        setClientOpen(false)
+      }
+    }
+    if (clientOpen) document.addEventListener('mousedown', handleOutside)
+    return () => document.removeEventListener('mousedown', handleOutside)
+  }, [clientOpen])
 
   const defaultCode = `PRJ${new Date().getFullYear().toString().slice(-2)}`
 
@@ -100,23 +111,42 @@ export default function ProjectDialog({ open, onOpenChange, project, onSaved }: 
           </div>
 
           {/* Client */}
-          <div>
+          <div ref={clientRef} className="relative">
             <label className="mb-1.5 block text-xs font-medium text-slate-400">
               Client
             </label>
             <Input
               type="text"
-              placeholder="e.g. Redevaerk, DSB, Credibom (optional)"
+              placeholder="Type or select a client (optional)"
               value={client}
-              onChange={(e) => setClient(e.target.value)}
-              onKeyDown={handleKeyDown}
-              list="client-suggestions"
+              onChange={(e) => { setClient(e.target.value); setClientOpen(true) }}
+              onFocus={() => setClientOpen(true)}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') setClientOpen(false)
+                else if (e.key === 'Enter') { setClientOpen(false); handleSubmit() }
+              }}
             />
-            <datalist id="client-suggestions">
-              {PRESET_CLIENTS.map((c) => (
-                <option key={c} value={c} />
-              ))}
-            </datalist>
+            {clientOpen && existingClients.length > 0 && (
+              <div className="absolute z-50 mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 py-1 shadow-xl">
+                {existingClients
+                  .filter((c) => c.toLowerCase().includes(client.toLowerCase()))
+                  .map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      onMouseDown={(e) => { e.preventDefault(); setClient(c); setClientOpen(false) }}
+                      className={cn(
+                        'flex w-full items-center px-3 py-2 text-sm transition-colors',
+                        client === c
+                          ? 'bg-slate-800 text-slate-100'
+                          : 'text-slate-300 hover:bg-slate-800 hover:text-slate-100'
+                      )}
+                    >
+                      {c}
+                    </button>
+                  ))}
+              </div>
+            )}
           </div>
 
           {/* Code */}
