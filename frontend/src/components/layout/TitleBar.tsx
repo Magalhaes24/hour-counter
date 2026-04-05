@@ -1,17 +1,50 @@
 ﻿'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
-import { Minus, Square, X } from 'lucide-react'
+import { Minus, Square, X, RefreshCw, Download, AlertCircle } from 'lucide-react'
+
+type UpdateState = 'idle' | 'checking' | 'up-to-date' | 'available' | 'applying' | 'done' | 'error'
 
 export default function TitleBar() {
   const [maximized, setMaximized] = useState(false)
   const [isElectron, setIsElectron] = useState(false)
+  const [updateState, setUpdateState] = useState<UpdateState>('idle')
+  const [updateError, setUpdateError] = useState<string | null>(null)
 
   useEffect(() => {
     const inElectron = !!window.electronAPI
     setIsElectron(inElectron)
     if (inElectron) window.electronAPI!.isMaximized().then(setMaximized)
   }, [])
+
+  const handleCheckUpdate = useCallback(async () => {
+    if (!window.electronAPI) return
+    if (updateState === 'available') {
+      // Second click applies the update
+      setUpdateState('applying')
+      setUpdateError(null)
+      const res = await window.electronAPI.applyUpdate()
+      if (res.error) {
+        setUpdateState('error')
+        setUpdateError(res.error)
+      } else {
+        setUpdateState('done')
+      }
+      return
+    }
+    setUpdateState('checking')
+    setUpdateError(null)
+    const res = await window.electronAPI.checkForUpdates()
+    if (res.error) {
+      setUpdateState('error')
+      setUpdateError(res.error)
+    } else if (res.hasUpdate) {
+      setUpdateState('available')
+    } else {
+      setUpdateState('up-to-date')
+      setTimeout(() => setUpdateState('idle'), 3000)
+    }
+  }, [updateState])
 
   const handleMinimize = useCallback(() => window.electronAPI?.minimize(), [])
   const handleMaximize = useCallback(() => {
@@ -34,6 +67,43 @@ export default function TitleBar() {
           Hour Counter
         </span>
       </div>
+
+      {/* Update button — only in Electron */}
+      {isElectron && (
+        <div
+          className="flex items-center gap-2 pr-2"
+          style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
+        >
+          {updateState === 'error' && (
+            <span className="text-[10px] text-rose-400 max-w-[160px] truncate" title={updateError ?? ''}>
+              {updateError}
+            </span>
+          )}
+          {updateState === 'up-to-date' && (
+            <span className="text-[10px] text-slate-500">Up to date</span>
+          )}
+          {updateState === 'available' && (
+            <span className="text-[10px] text-emerald-400">Update available — click to install</span>
+          )}
+          {updateState === 'done' && (
+            <span className="text-[10px] text-emerald-400">Updated! Reloading…</span>
+          )}
+          <button
+            onClick={handleCheckUpdate}
+            disabled={updateState === 'checking' || updateState === 'applying' || updateState === 'done'}
+            title={updateState === 'available' ? 'Click to install update' : 'Check for updates'}
+            className="flex h-6 w-6 items-center justify-center rounded text-slate-600 transition-colors hover:bg-slate-800 hover:text-slate-300 disabled:opacity-40"
+          >
+            {updateState === 'error' ? (
+              <AlertCircle className="h-3 w-3 text-rose-400" />
+            ) : updateState === 'available' ? (
+              <Download className="h-3 w-3 text-emerald-400" />
+            ) : (
+              <RefreshCw className={`h-3 w-3 ${updateState === 'checking' || updateState === 'applying' ? 'animate-spin' : ''}`} />
+            )}
+          </button>
+        </div>
+      )}
 
       {/* Window controls — only shown inside Electron */}
       {isElectron && (

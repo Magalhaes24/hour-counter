@@ -83,10 +83,10 @@ export default function ProjectCard({
   }
 
   return (
-    <div className="group relative flex overflow-hidden rounded-xl border border-slate-800 bg-slate-900 transition-colors hover:border-slate-700">
+    <div className="group relative flex rounded-xl border border-slate-800 bg-slate-900 transition-colors hover:border-slate-700">
       {/* Color bar on left edge */}
       <div
-        className="w-1 shrink-0 self-stretch"
+        className="w-1 shrink-0 self-stretch rounded-l-xl"
         style={{ backgroundColor: colorHex }}
       />
 
@@ -120,17 +120,6 @@ export default function ProjectCard({
 
       {/* Actions */}
       <div className="flex items-center gap-1 pr-3">
-        {/* Quick edit button */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
-          onClick={() => onEdit(project)}
-          title="Edit project"
-        >
-          <Pencil className="h-3.5 w-3.5" />
-        </Button>
-
         {/* Three-dot menu — visible at reduced opacity always */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
