@@ -5,12 +5,13 @@ import { Minus, Square, X } from 'lucide-react'
 
 export default function TitleBar() {
   const [maximized, setMaximized] = useState(false)
-  const isElectron = typeof window !== 'undefined' && !!window.electronAPI
+  const [isElectron, setIsElectron] = useState(false)
 
   useEffect(() => {
-    if (!isElectron) return
-    window.electronAPI!.isMaximized().then(setMaximized)
-  }, [isElectron])
+    const inElectron = !!window.electronAPI
+    setIsElectron(inElectron)
+    if (inElectron) window.electronAPI!.isMaximized().then(setMaximized)
+  }, [])
 
   const handleMinimize = useCallback(() => window.electronAPI?.minimize(), [])
   const handleMaximize = useCallback(() => {

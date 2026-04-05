@@ -132,6 +132,7 @@ async function setup(onStatus) {
     log('Creating venv...')
     const setupBat = writeBat('hc_setup.bat', [
       '@echo off',
+      'chcp 65001 > nul',
       `python -m venv "${path.join(BACKEND_DIR, '.venv')}"`,
       `"${VENV_PYTHON}" -m pip install -r "${path.join(BACKEND_DIR, 'requirements.txt')}" -q`,
     ])
@@ -142,6 +143,7 @@ async function setup(onStatus) {
     log('Running npm install...')
     const npmBat = writeBat('hc_npm_install.bat', [
       '@echo off',
+      'chcp 65001 > nul',
       `cd /d "${FRONTEND_DIR}"`,
       'npm install --silent',
     ])
@@ -157,6 +159,7 @@ function startBackend() {
   freePort(8000)
   const bat = writeBat('hc_backend.bat', [
     '@echo off',
+    'chcp 65001 > nul',
     `cd /d "${BACKEND_DIR}"`,
     `"${VENV_PYTHON}" -m uvicorn main:app --port 8000`,
   ])
@@ -183,6 +186,7 @@ function startFrontend() {
   try { if (fs.existsSync(cache)) fs.rmSync(cache, { recursive: true, force: true }) } catch (e) { log(`Cache clear skipped: ${e.message}`) }
   const bat = writeBat('hc_frontend.bat', [
     '@echo off',
+    'chcp 65001 > nul',
     `cd /d "${FRONTEND_DIR}"`,
     `set NODE_PATH=${path.join(FRONTEND_DIR, 'node_modules')}`,
     'npm run dev',
@@ -195,26 +199,27 @@ function startFrontend() {
 // ---------------------------------------------------------------------------
 function createSplash() {
   splashWindow = new BrowserWindow({
-    width: 340, height: 180,
+    width: 340, height: 220,
     frame: false, resizable: false,
     backgroundColor: '#020617',
-    webPreferences: { nodeIntegration: true, contextIsolation: false },
+    webPreferences: { nodeIntegration: false, contextIsolation: true },
     alwaysOnTop: true, center: true, skipTaskbar: true,
   })
-  splashWindow.loadURL(`data:text/html,<!DOCTYPE html>
-<html><body style="background:#020617;color:#64748b;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;margin:0;user-select:none">
-<div style="font-size:20px;font-weight:700;color:#e2e8f0;letter-spacing:-0.3px;margin-bottom:14px">Hour Counter</div>
-<div id="s" style="font-size:13px">Starting…</div>
-</body></html>`)
+  splashWindow.loadFile(path.join(__dirname, 'splash.html'))
 }
 
 function setSplashStatus(msg) {
   log(`Status: ${msg}`)
   if (!splashWindow || splashWindow.isDestroyed()) return
-  splashWindow.webContents.executeJavaScript(
-    `document.getElementById('s').textContent = ${JSON.stringify(msg)}`
-  ).catch(() => {})
+  const js = `document.getElementById('s').textContent = ${JSON.stringify(msg)}`
+  if (splashWindow.webContents.isLoading()) {
+    splashWindow.webContents.once('did-finish-load', () => {
+      if (!splashWindow || splashWindow.isDestroyed()) return
+      splashWindow.webContents.executeJavaScript(js).catch(() => {})
+    })
+  } else {
+    splashWindow.webContents.executeJavaScript(js).catch(() => {})
+  }
 }
 
 function closeSplash() {

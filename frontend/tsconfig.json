@@ -34,7 +34,8 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     "C:\\Users\\franc\\.cache\\hours-counter-next/types/**/*.ts",
-    "..\\..\\..\\..\\.cache\\hours-counter-next/types/**/*.ts"
+    "..\\..\\..\\..\\.cache\\hours-counter-next/types/**/*.ts",
+    "..\\..\\..\\..\\..\\.cache\\hours-counter-next/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"
