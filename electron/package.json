@@ -1,0 +1,12 @@
+{
+  "name": "hours-counter",
+  "version": "1.0.0",
+  "description": "Local hours tracking desktop app",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^31.7.7"
+  }
+}
