@@ -115,6 +115,7 @@ export default function ProjectsPage() {
         onOpenChange={setDialogOpen}
         project={editingProject}
         onSaved={handleSaved}
+        existingClients={[...new Set(projects.map((p) => p.client).filter(Boolean) as string[])]}
       />
     </div>
   )

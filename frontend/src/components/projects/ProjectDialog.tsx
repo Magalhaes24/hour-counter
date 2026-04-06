@@ -1,6 +1,6 @@
 ﻿'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/Dialog'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -22,19 +22,36 @@ interface ProjectDialogProps {
   onOpenChange: (open: boolean) => void
   project?: Project | null
   onSaved: (project: Project) => void
+  existingClients?: string[]
 }
 
-export default function ProjectDialog({ open, onOpenChange, project, onSaved }: ProjectDialogProps) {
+export default function ProjectDialog({ open, onOpenChange, project, onSaved, existingClients = [] }: ProjectDialogProps) {
   const [name, setName] = useState('')
   const [code, setCode] = useState('')
+  const [client, setClient] = useState('')
+  const [clientOpen, setClientOpen] = useState(false)
   const [color, setColor] = useState('#6366f1')
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  const clientRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleOutside = (e: MouseEvent) => {
+      if (clientRef.current && !clientRef.current.contains(e.target as Node)) {
+        setClientOpen(false)
+      }
+    }
+    if (clientOpen) document.addEventListener('mousedown', handleOutside)
+    return () => document.removeEventListener('mousedown', handleOutside)
+  }, [clientOpen])
+
+  const defaultCode = `PRJ${new Date().getFullYear().toString().slice(-2)}`
 
   useEffect(() => {
     if (open) {
       setName(project?.name ?? '')
-      setCode(project?.code ?? '')
+      setCode(project?.code ?? defaultCode)
+      setClient(project?.client ?? '')
       setColor(project?.color ?? '#6366f1')
       setError(null)
     }
@@ -51,10 +68,11 @@ export default function ProjectDialog({ open, onOpenChange, project, onSaved }: 
     setError(null)
     try {
       let saved: Project
+      const clientVal = client.trim() || null
       if (project) {
-        saved = await updateProject(project.id, { name: trimmedName, color, code: code.trim() || null })
+        saved = await updateProject(project.id, { name: trimmedName, color, code: code.trim() || null, client: clientVal })
       } else {
-        saved = await createProject({ name: trimmedName, color, code: code.trim() || null })
+        saved = await createProject({ name: trimmedName, color, code: code.trim() || null, client: clientVal })
       }
       onSaved(saved)
       onOpenChange(false)
@@ -92,6 +110,45 @@ export default function ProjectDialog({ open, onOpenChange, project, onSaved }: 
             />
           </div>
 
+          {/* Client */}
+          <div ref={clientRef} className="relative">
+            <label className="mb-1.5 block text-xs font-medium text-slate-400">
+              Client
+            </label>
+            <Input
+              type="text"
+              placeholder="Type or select a client (optional)"
+              value={client}
+              onChange={(e) => { setClient(e.target.value); setClientOpen(true) }}
+              onFocus={() => setClientOpen(true)}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') setClientOpen(false)
+                else if (e.key === 'Enter') { setClientOpen(false); handleSubmit() }
+              }}
+            />
+            {clientOpen && existingClients.length > 0 && (
+              <div className="absolute z-50 mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 py-1 shadow-xl">
+                {existingClients
+                  .filter((c) => c.toLowerCase().includes(client.toLowerCase()))
+                  .map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      onMouseDown={(e) => { e.preventDefault(); setClient(c); setClientOpen(false) }}
+                      className={cn(
+                        'flex w-full items-center px-3 py-2 text-sm transition-colors',
+                        client === c
+                          ? 'bg-slate-800 text-slate-100'
+                          : 'text-slate-300 hover:bg-slate-800 hover:text-slate-100'
+                      )}
+                    >
+                      {c}
+                    </button>
+                  ))}
+              </div>
+            )}
+          </div>
+
           {/* Code */}
           <div>
             <label className="mb-1.5 block text-xs font-medium text-slate-400">
@@ -99,7 +156,7 @@ export default function ProjectDialog({ open, onOpenChange, project, onSaved }: 
             </label>
             <Input
               type="text"
-              placeholder="e.g. PRJ2301.01 (optional)"
+              placeholder="e.g. PRJ26.01"
               value={code}
               onChange={(e) => setCode(e.target.value)}
               onKeyDown={handleKeyDown}
