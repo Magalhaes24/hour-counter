@@ -10,3 +10,4 @@ End If
 
 ' Launch the desktop app (cmd window hidden, Electron creates its own window)
 shell.Run "cmd /c cd /d """ & root & "\electron"" && npm start", 0, False
+
